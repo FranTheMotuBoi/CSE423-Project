@@ -1,0 +1,115 @@
+glMatrixMode(GL_PROJECTION)
+glLoadIdentity()
+gluPerspective(45, 800 / 600, 0.1, 100.0)  # This defines the viewing frustum
+
+if difficulty == 'easy':
+    for _ in range(5):
+        x = random.uniform(-10, 10)  # X-axis bounds: -10 to 10
+        y = 0.0                      # Y-axis fixed at 0
+        z = ship_pos[2] - random.uniform(30, 50)  # Z-axis relative to player
+        
+
+
+def generate_star(z_offset):
+    x = random.uniform(-20, 20)  # X-axis bounds: -20 to 20
+    y = random.uniform(-15, 15)  # Y-axis bounds: -15 to 15
+    z = z_offset   
+    
+    
+def update(self):
+    # Move clouds slowly
+    self.pos[2] += 0.01  # Move forward
+    # Reset position if too far
+    if self.pos[2] > 50:
+        self.pos[2] = -50
+        self.pos[0] = random.uniform(-20, 20)  # X-axis bounds: -20 to 20
+        self.pos[1] = random.uniform(-15, 15)  # Y-axis bounds: -15 to 15
+        
+        
+#mirrorview
+
+def draw_mirror():
+    if not mirror_enabled:
+        return
+    # Save current viewport and matrices
+    glPushAttrib(GL_VIEWPORT_BIT)
+    glMatrixMode(GL_PROJECTION)
+    glPushMatrix()
+    glMatrixMode(GL_MODELVIEW)
+    glPushMatrix()
+
+    # Set up a tiny viewport for the mirror (like an eye button, top right corner)
+    width = glutGet(GLUT_WINDOW_WIDTH)
+    height = glutGet(GLUT_WINDOW_HEIGHT)
+    mirror_w = int(width * 0.045)  # Mirror width is 4.5% of window width
+    mirror_h = int(height * 0.03)  # Mirror height is 3% of window height
+    mirror_x = int(width - mirror_w - 10)  # Position from right edge
+    mirror_y = int(height - mirror_h - 10)  # Position from top edge
+    glViewport(mirror_x, mirror_y, mirror_w, mirror_h)
+
+    # Set up projection for the mirror
+    glMatrixMode(GL_PROJECTION)
+    glLoadIdentity()
+    gluPerspective(45, mirror_w / mirror_h, 0.1, 100.0)
+    glMatrixMode(GL_MODELVIEW)
+    glLoadIdentity()
+    # Rear view: camera at ship, looking backward
+    gluLookAt(
+        ship_pos[0], ship_pos[1] + 1, ship_pos[2],  # Camera position
+        ship_pos[0], ship_pos[1], ship_pos[2] + 5,  # Look behind
+        0, 1, 0  # Up vector
+    )
+    
+    # Draw scene in mirror (stars, enemies, bullets, but not HUD/radar)
+    draw_stars()
+    for enemy in enemies:
+        enemy.draw()
+    for bullet in player_bullets:
+        bullet.draw()
+    for missile in player_missiles:
+        missile.draw()
+    for bullet in enemy_bullets:
+        bullet.draw()
+    draw_spaceship()  # Show your own ship in the mirror
+
+    # Draw eye icon (ellipse with a pupil) as the border/button
+    glMatrixMode(GL_PROJECTION)
+    glLoadIdentity()
+    glOrtho(0, width, 0, height, -1, 1)
+    glMatrixMode(GL_MODELVIEW)
+    glLoadIdentity()
+    glViewport(0, 0, width, height)
+    cx = mirror_x + mirror_w / 2
+    cy = mirror_y + mirror_h / 2
+    rx = mirror_w / 2
+    ry = mirror_h / 2
+    # Eye outline
+    glColor3f(1.0, 1.0, 0.0)  # Yellow border
+    glLineWidth(1.0)
+    glBegin(GL_LINE_LOOP)
+    for i in range(100):
+        theta = 2.0 * math.pi * i / 100
+        x = cx + rx * math.cos(theta)
+        y = cy + ry * math.sin(theta)
+        glVertex2f(x, y)
+    glEnd()
+    # Eye pupil
+    glColor3f(0.0, 0.0, 0.0)
+    prx = rx * 0.35
+    pry = ry * 0.35
+    glBegin(GL_POLYGON)
+    for i in range(100):
+        theta = 2.0 * math.pi * i / 100
+        x = cx + prx * math.cos(theta)
+        y = cy + pry * math.sin(theta)
+        glVertex2f(x, y)
+    glEnd()
+    glLineWidth(1.0)
+
+    # Restore viewport and matrices
+    glMatrixMode(GL_PROJECTION)
+    glPopMatrix()
+    glMatrixMode(GL_MODELVIEW)
+    glPopMatrix()
+    glPopAttrib()
+    
